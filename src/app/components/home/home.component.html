@@ -1,0 +1,201 @@
+<div class="home-grid">
+  <!-- Add Transaction -->
+  <section class="card add-card">
+    <h2>Add Transaction</h2>
+
+    <div class="alert alert-error" *ngIf="addError">{{ addError }}</div>
+    <div class="alert alert-success" *ngIf="addSuccess">{{ addSuccess }}</div>
+
+    <form (ngSubmit)="addTransaction()">
+      <div class="form-group">
+        <label>Type</label>
+        <div class="type-toggle">
+          <button
+            type="button"
+            class="type-btn"
+            [class.active-income]="newType === 'income'"
+            (click)="newType = 'income'"
+          >
+            Income
+          </button>
+          <button
+            type="button"
+            class="type-btn"
+            [class.active-expense]="newType === 'expense'"
+            (click)="newType = 'expense'"
+          >
+            Expense
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <input
+          class="form-control"
+          type="text"
+          [(ngModel)]="newDescription"
+          name="description"
+          placeholder="e.g. Grocery shopping"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Amount</label>
+        <input
+          class="form-control"
+          type="number"
+          min="0.01"
+          step="0.01"
+          [(ngModel)]="newAmount"
+          name="amount"
+          placeholder="0.00"
+        />
+      </div>
+
+      <button class="btn btn-primary btn-block" type="submit" [disabled]="addLoading">
+        <span class="spinner" *ngIf="addLoading"></span>
+        {{ addLoading ? 'Adding...' : 'Add Transaction' }}
+      </button>
+    </form>
+
+    <div class="summary-row">
+      <div class="summary-item">
+        <span class="text-muted">Income</span>
+        <strong class="text-income">{{ totals.income | number: '1.2-2' }}</strong>
+      </div>
+      <div class="summary-item">
+        <span class="text-muted">Expense</span>
+        <strong class="text-expense">{{ totals.expense | number: '1.2-2' }}</strong>
+      </div>
+      <div class="summary-item">
+        <span class="text-muted">Balance</span>
+        <strong [class.text-income]="totals.balance >= 0" [class.text-expense]="totals.balance < 0">
+          {{ totals.balance | number: '1.2-2' }}
+        </strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Transactions -->
+  <section class="card list-card">
+    <div class="list-header">
+      <h2>Recent Transactions</h2>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label>Type</label>
+        <select class="form-control" [(ngModel)]="filters.type" name="filterType">
+          <option value="">All</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Date From</label>
+        <input class="form-control" type="date" [(ngModel)]="filters.dateFrom" name="dateFrom" />
+      </div>
+      <div class="filter-group">
+        <label>Date To</label>
+        <input class="form-control" type="date" [(ngModel)]="filters.dateTo" name="dateTo" />
+      </div>
+      <div class="filter-group">
+        <label>Min Amount</label>
+        <input class="form-control" type="number" [(ngModel)]="filters.amountMin" name="amountMin" placeholder="0" />
+      </div>
+      <div class="filter-group">
+        <label>Max Amount</label>
+        <input class="form-control" type="number" [(ngModel)]="filters.amountMax" name="amountMax" placeholder="Any" />
+      </div>
+      <div class="filter-group filter-actions">
+        <button class="btn btn-primary" (click)="applyFilters()">Apply</button>
+        <button class="btn btn-outline" (click)="clearFilters()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Sort controls -->
+    <div class="sort-row">
+      <span class="text-muted">Sort by:</span>
+      <button
+        class="sort-btn"
+        [class.active]="filters.sortBy === 'date'"
+        (click)="changeSort('date')"
+      >
+        Date <span *ngIf="filters.sortBy === 'date'">{{ filters.sortOrder === 'asc' ? '↑' : '↓' }}</span>
+      </button>
+      <button
+        class="sort-btn"
+        [class.active]="filters.sortBy === 'amount'"
+        (click)="changeSort('amount')"
+      >
+        Amount <span *ngIf="filters.sortBy === 'amount'">{{ filters.sortOrder === 'asc' ? '↑' : '↓' }}</span>
+      </button>
+      <button
+        class="sort-btn"
+        [class.active]="filters.sortBy === 'type'"
+        (click)="changeSort('type')"
+      >
+        Type <span *ngIf="filters.sortBy === 'type'">{{ filters.sortOrder === 'asc' ? '↑' : '↓' }}</span>
+      </button>
+    </div>
+
+    <div class="alert alert-error" *ngIf="listError">{{ listError }}</div>
+
+    <div class="loading-row" *ngIf="listLoading">
+      <span class="spinner" style="border-top-color:#2563eb;border-color:rgba(37,99,235,0.25)"></span>
+      <span class="text-muted">Loading transactions...</span>
+    </div>
+
+    <div class="empty-row" *ngIf="!listLoading && transactions.length === 0">
+      No transactions found. Try adjusting your filters or add a new transaction.
+    </div>
+
+    <ul class="transaction-list" *ngIf="!listLoading && transactions.length > 0">
+      <li class="transaction-item" *ngFor="let t of transactions">
+        <div class="t-left">
+          <span class="badge" [ngClass]="t.type === 'income' ? 'badge-income' : 'badge-expense'">
+            {{ t.type }}
+          </span>
+          <div class="t-details">
+            <div class="t-desc">{{ t.description }}</div>
+            <div class="t-date text-muted">{{ t.date | date: 'mediumDate' }}</div>
+          </div>
+        </div>
+        <div class="t-right">
+          <span [class.text-income]="t.type === 'income'" [class.text-expense]="t.type === 'expense'">
+            {{ t.type === 'income' ? '+' : '-' }}{{ t.amount | number: '1.2-2' }}
+          </span>
+          <button class="icon-btn" title="Delete" (click)="deleteTransaction(t._id)">✕</button>
+        </div>
+      </li>
+    </ul>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="pagination.totalPages > 1">
+      <button
+        class="btn btn-outline"
+        [disabled]="pagination.page === 1"
+        (click)="goToPage(pagination.page - 1)"
+      >
+        Prev
+      </button>
+      <button
+        *ngFor="let p of pageNumbers"
+        class="page-btn"
+        [class.active]="p === pagination.page"
+        (click)="goToPage(p)"
+      >
+        {{ p }}
+      </button>
+      <button
+        class="btn btn-outline"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="goToPage(pagination.page + 1)"
+      >
+        Next
+      </button>
+    </div>
+  </section>
+</div>

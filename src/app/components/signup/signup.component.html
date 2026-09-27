@@ -1,0 +1,61 @@
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <ng-container *ngIf="step === 'form'">
+      <h1 class="auth-title">Create your account</h1>
+      <p class="auth-subtitle">Start tracking your income and expenses</p>
+
+      <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+
+      <form (ngSubmit)="submitSignup()">
+        <div class="form-group">
+          <label>Username</label>
+          <input class="form-control" type="text" [(ngModel)]="username" name="username" placeholder="john_doe" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input class="form-control" type="email" [(ngModel)]="email" name="email" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input class="form-control" type="password" [(ngModel)]="password" name="password" placeholder="At least 6 characters" />
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input class="form-control" type="password" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Re-enter password" />
+        </div>
+
+        <button class="btn btn-primary btn-block" type="submit" [disabled]="loading">
+          <span class="spinner" *ngIf="loading"></span>
+          {{ loading ? 'Sending OTP...' : 'Sign Up' }}
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a routerLink="/signin">Sign in</a>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="step === 'otp'">
+      <h1 class="auth-title">Verify your email</h1>
+      <p class="otp-hint">We sent a 6-digit code to <strong>{{ email }}</strong></p>
+
+      <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+      <div class="alert alert-success" *ngIf="success">{{ success }}</div>
+
+      <form (ngSubmit)="submitOtp()">
+        <div class="form-group">
+          <label>OTP Code</label>
+          <input class="form-control" type="text" maxlength="6" [(ngModel)]="otpCode" name="otpCode" placeholder="123456" />
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" [disabled]="loading">
+          <span class="spinner" *ngIf="loading"></span>
+          {{ loading ? 'Verifying...' : 'Verify & Create Account' }}
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Didn't get a code? <button class="link-btn" (click)="resendOtp()">Resend OTP</button>
+      </div>
+    </ng-container>
+  </div>
+</div>

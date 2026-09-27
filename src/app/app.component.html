@@ -1,0 +1,15 @@
+<nav class="navbar" *ngIf="authService.isLoggedIn()">
+  <div class="navbar-brand">
+    <span class="brand-icon">💰</span> Finance Tracker
+  </div>
+  <div class="navbar-links">
+    <a routerLink="/home" routerLinkActive="active">Home</a>
+    <a routerLink="/profile" routerLinkActive="active">Profile</a>
+    <span class="navbar-user" *ngIf="currentUser">Hi, {{ currentUser.username }}</span>
+    <button class="btn btn-outline" (click)="logout()">Logout</button>
+  </div>
+</nav>
+
+<main [class.with-nav]="authService.isLoggedIn()">
+  <router-outlet></router-outlet>
+</main>
